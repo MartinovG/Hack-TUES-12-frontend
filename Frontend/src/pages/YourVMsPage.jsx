@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { vmApi } from '../lib/api.js'
+import { apiHost, vmApi } from '../lib/api.js'
 
 const statusOptions = ['available', 'offline', 'maintenance', 'running', 'setup']
 
@@ -170,6 +170,13 @@ function YourVMsPage({ authToken, currentUser }) {
                   {updatingVmId === vm.id ? (
                     <p className="text-sm text-stone-400">Updating status...</p>
                   ) : null}
+
+                  <a
+                    href={`${apiHost}/download/python`}
+                    className="inline-flex items-center justify-center rounded-full bg-lime-300 px-4 py-3 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-lime-200"
+                  >
+                    Download Script
+                  </a>
                 </div>
               </div>
             </article>
