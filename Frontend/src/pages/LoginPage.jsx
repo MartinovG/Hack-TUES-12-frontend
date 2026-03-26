@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { authApi } from '../lib/api.js'
 
-function LoginPage({ currentUser, initialForm, onLogin }) {
+const initialForm = {
+  username: '',
+  email: '',
+  password: '',
+}
+
+function LoginPage({ currentUser, onAuthSuccess }) {
+  const [mode, setMode] = useState('login')
   const [form, setForm] = useState(initialForm)
+  const [errorMessage, setErrorMessage] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -19,11 +29,38 @@ function LoginPage({ currentUser, initialForm, onLogin }) {
     }))
   }
 
-  const handleSubmit = (event) => {
-    event.preventDefault()
-    onLogin(form)
+  const handleModeChange = (nextMode) => {
+    setMode(nextMode)
+    setErrorMessage('')
     setForm(initialForm)
-    navigate('/', { replace: true })
+  }
+
+  const handleSubmit = async (event) => {
+    event.preventDefault()
+    setErrorMessage('')
+    setIsSubmitting(true)
+
+    try {
+      const response =
+        mode === 'login'
+          ? await authApi.login({
+              email: form.email,
+              password: form.password,
+            })
+          : await authApi.register({
+              username: form.username,
+              email: form.email,
+              password: form.password,
+            })
+
+      onAuthSuccess(response)
+      setForm(initialForm)
+      navigate('/', { replace: true })
+    } catch (error) {
+      setErrorMessage(error.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -32,64 +69,88 @@ function LoginPage({ currentUser, initialForm, onLogin }) {
         <article className="overflow-hidden rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(17,24,39,0.82),rgba(10,15,13,0.95)),radial-gradient(circle_at_top_left,rgba(163,230,53,0.2),transparent_36%)] p-8 shadow-2xl shadow-black/25">
           <div className="max-w-xl space-y-5">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-lime-200/80">
-              Access Console
+              Backend Access
             </p>
             <h1 className="text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl">
-              Log in to manage shared compute responsibly.
+              Connect the frontend to your live NestJS session.
             </h1>
             <p className="text-base leading-8 text-stone-300">
-              This mock authentication screen is ready to be connected later to a NestJS backend
-              with real users, hashed passwords, and token-based sessions.
+              This screen now uses the real backend endpoints for login, registration, and token
+              persistence so the exposed frontend can be tested from another device.
             </p>
           </div>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-3">
             <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-              <p className="text-sm font-semibold text-white">Fairer access</p>
+              <p className="text-sm font-semibold text-white">Real auth</p>
               <p className="mt-2 text-sm leading-6 text-stone-300">
-                People without powerful devices can still reach modern software environments.
+                `POST /auth/login` and `POST /auth/register` now power this page.
               </p>
             </div>
             <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-              <p className="text-sm font-semibold text-white">Less waste</p>
+              <p className="text-sm font-semibold text-white">Stored token</p>
               <p className="mt-2 text-sm leading-6 text-stone-300">
-                Idle machines become useful again instead of moving closer to disposal.
+                The JWT is persisted locally and reused through `GET /auth/profile`.
               </p>
             </div>
             <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-4">
-              <p className="text-sm font-semibold text-white">Simple rollout</p>
+              <p className="text-sm font-semibold text-white">Remote-friendly</p>
               <p className="mt-2 text-sm leading-6 text-stone-300">
-                The UI is already structured for future backend integration and route protection.
+                Point `VITE_API_URL` to the backend machine and test from another laptop.
               </p>
             </div>
           </div>
         </article>
 
         <article className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-xl sm:p-8">
-          <div className="space-y-3">
+          <div className="flex gap-2 rounded-full border border-white/10 bg-stone-950/40 p-1">
+            {['login', 'register'].map((tab) => (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => handleModeChange(tab)}
+                className={`flex-1 rounded-full px-4 py-2 text-sm font-medium capitalize transition ${
+                  mode === tab
+                    ? 'bg-lime-300 text-stone-950'
+                    : 'text-stone-300 hover:bg-white/5 hover:text-white'
+                }`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+
+          <div className="mt-6 space-y-3">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-lime-200/80">
-              Login
+              {mode === 'login' ? 'Login' : 'Register'}
             </p>
-            <h2 className="text-3xl font-semibold text-white">Enter the management console</h2>
+            <h2 className="text-3xl font-semibold text-white">
+              {mode === 'login'
+                ? 'Enter the management console'
+                : 'Create a backend account'}
+            </h2>
             <p className="text-sm leading-7 text-stone-300">
-              Use any values for now. This is a frontend-only mock flow while the backend and
-              database are still being prepared.
+              {mode === 'login'
+                ? 'Use an existing backend user account to access live data.'
+                : 'This form maps directly to the NestJS register endpoint.'}
             </p>
           </div>
 
           <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
-            <label className="block space-y-2">
-              <span className="text-sm font-medium text-stone-100">Name</span>
-              <input
-                name="name"
-                type="text"
-                placeholder="Borimir Ganchev"
-                value={form.name}
-                onChange={handleChange}
-                required
-                className="w-full rounded-2xl border border-white/10 bg-stone-950/50 px-4 py-3 text-stone-100 outline-none transition focus:border-lime-300/50 focus:ring-2 focus:ring-lime-300/20"
-              />
-            </label>
+            {mode === 'register' ? (
+              <label className="block space-y-2">
+                <span className="text-sm font-medium text-stone-100">Username</span>
+                <input
+                  name="username"
+                  type="text"
+                  placeholder="borimir"
+                  value={form.username}
+                  onChange={handleChange}
+                  required
+                  className="w-full rounded-2xl border border-white/10 bg-stone-950/50 px-4 py-3 text-stone-100 outline-none transition focus:border-lime-300/50 focus:ring-2 focus:ring-lime-300/20"
+                />
+              </label>
+            ) : null}
 
             <label className="block space-y-2">
               <span className="text-sm font-medium text-stone-100">Email</span>
@@ -117,11 +178,22 @@ function LoginPage({ currentUser, initialForm, onLogin }) {
               />
             </label>
 
+            {errorMessage ? (
+              <div className="rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
+                {errorMessage}
+              </div>
+            ) : null}
+
             <button
               type="submit"
-              className="w-full rounded-full bg-lime-300 px-5 py-3 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-lime-200"
+              disabled={isSubmitting}
+              className="w-full rounded-full bg-lime-300 px-5 py-3 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              Log In
+              {isSubmitting
+                ? 'Submitting...'
+                : mode === 'login'
+                  ? 'Log In'
+                  : 'Create Account'}
             </button>
           </form>
 

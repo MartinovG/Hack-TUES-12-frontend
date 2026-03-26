@@ -113,9 +113,11 @@ function HomePage({ currentUser }) {
       <section className="rounded-[2rem] border border-emerald-300/10 bg-emerald-400/10 p-5 text-sm leading-7 text-emerald-50/90">
         {currentUser ? (
           <p>
-            Welcome back, <span className="font-semibold text-white">{currentUser.name}</span>.
-            Your mock session is active and ready to be replaced later with a real NestJS-backed
-            authentication flow.
+            Welcome back,{' '}
+            <span className="font-semibold text-white">
+              {currentUser.username || currentUser.name}
+            </span>
+            . Your session is now connected to the backend through the stored JWT token.
           </p>
         ) : (
           <p>

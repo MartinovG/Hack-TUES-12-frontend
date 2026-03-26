@@ -1,12 +1,16 @@
 import { NavLink, Link } from 'react-router-dom'
 
-const navItems = [
-  { label: 'Home Page', to: '/' },
-  { label: 'VM Collection', to: '/vm-collection' },
-  { label: 'Your VMs', to: '/your-vms' },
-]
-
 function NavBar({ currentUser, onLogout }) {
+  const navItems = [
+    { label: 'Home Page', to: '/' },
+    ...(currentUser
+      ? [
+          { label: 'VM Collection', to: '/vm-collection' },
+          { label: 'Your VMs', to: '/your-vms' },
+        ]
+      : []),
+  ]
+
   const linkClassName = ({ isActive }) =>
     `rounded-full px-4 py-2 text-sm font-medium transition ${
       isActive
@@ -45,7 +49,9 @@ function NavBar({ currentUser, onLogout }) {
           {currentUser ? (
             <>
               <div className="rounded-full border border-emerald-200/15 bg-emerald-300/10 px-4 py-2 text-right">
-                <p className="text-sm font-semibold text-white">{currentUser.name}</p>
+                <p className="text-sm font-semibold text-white">
+                  {currentUser.username || currentUser.name}
+                </p>
                 <p className="text-xs text-stone-300">{currentUser.email}</p>
               </div>
               <button
