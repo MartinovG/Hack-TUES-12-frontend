@@ -47,7 +47,13 @@ function YourVMsPage({ authToken, currentUser }) {
   )
 
   const selectedRentals = useMemo(
-    () => rentals.filter((rental) => rental.receiverId === currentUser.id && rental.vm),
+    () =>
+      rentals.filter(
+        (rental) =>
+          rental.receiverId === currentUser.id &&
+          rental.rentalState === 'active' &&
+          rental.vm,
+      ),
     [currentUser.id, rentals],
   )
 
@@ -153,7 +159,7 @@ function YourVMsPage({ authToken, currentUser }) {
               ownedVms.map((vm) => {
                 const activeRental = activeOwnedRentalByVmId.get(vm.id)
                 const powerState = getLaptopPowerState(vm)
-                const usageState = activeRental ? 'In Use' : 'Not In Use'
+                const usageState = activeRental ? 'Using' : 'Not Using'
 
                 return (
                   <article
@@ -171,7 +177,7 @@ function YourVMsPage({ authToken, currentUser }) {
                           {powerState === 'On' ? (
                             <StatusPill
                               label={usageState}
-                              tone={usageState === 'In Use' ? 'amber' : 'green'}
+                              tone={usageState === 'Using' ? 'amber' : 'green'}
                             />
                           ) : null}
                         </div>
