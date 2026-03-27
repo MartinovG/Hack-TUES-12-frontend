@@ -24,14 +24,14 @@ function NavBar({ currentUser, onLogout }) {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center">
           <Link to="/" className="flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-lime-300 text-sm font-black uppercase tracking-[0.24em] text-stone-950">
-              ZW
+              SC
             </div>
             <div>
               <p className="text-xs uppercase tracking-[0.32em] text-lime-200/80">
-                Zero Waste Grid
+                Share A Comp
               </p>
               <p className="text-sm text-stone-300">
-                Shared compute for wider access
+                Share computers for wider access
               </p>
             </div>
           </Link>

@@ -180,13 +180,11 @@ function YourVMsPage({ authToken, currentUser }) {
                         </div>
 
                         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                          <SpecCard label="Laptop Power" value={powerState} />
                           {powerState === 'On' ? (
                             <SpecCard label="Usage" value={usageState} />
                           ) : null}
                           <SpecCard label="CPU Model" value={vm.cpuModel} />
                           <SpecCard label="CPU Cores" value={vm.cpuCores} />
-                          <SpecCard label="Frequency" value={`${vm.cpuFrequencyGhz} GHz`} />
                           <SpecCard label="RAM" value={`${vm.ramGb} GB`} />
                           <SpecCard label="Storage" value={`${vm.storageGb} GB`} />
                           <SpecCard label="GPU" value={vm.gpuModel || 'No dedicated GPU'} />
@@ -194,7 +192,6 @@ function YourVMsPage({ authToken, currentUser }) {
                             label="GPU VRAM"
                             value={vm.gpuVramGb ? `${vm.gpuVramGb} GB` : 'N/A'}
                           />
-                          <SpecCard label="OS" value={vm.os} />
                           <SpecCard label="Price / Hour" value={`$${vm.pricePerHour}`} />
                           <SpecCard label="Last Heartbeat" value={formatDate(vm.lastHeartbeat)} />
                           <SpecCard label="Created" value={formatDate(vm.createdAt)} />
@@ -281,14 +278,11 @@ function RentalCard({ rental }) {
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <SpecCard label="CPU Model" value={vm.cpuModel} />
           <SpecCard label="CPU Cores" value={vm.cpuCores} />
-          <SpecCard label="Frequency" value={`${vm.cpuFrequencyGhz} GHz`} />
           <SpecCard label="RAM" value={`${vm.ramGb} GB`} />
           <SpecCard label="Storage" value={`${vm.storageGb} GB`} />
           <SpecCard label="GPU" value={vm.gpuModel || 'No dedicated GPU'} />
           <SpecCard label="OS" value={vm.os} />
-          <SpecCard label="Price / Hour" value={`$${vm.pricePerHour}`} />
           <SpecCard label="Selected At" value={formatDate(rental.startTime)} />
-          <SpecCard label="Payment" value={rental.paymentStatus} />
           <SpecCard label="Provider ID" value={vm.providerId} />
         </div>
       </div>
