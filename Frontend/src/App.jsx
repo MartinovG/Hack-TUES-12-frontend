@@ -4,6 +4,7 @@ import NavBar from './components/NavBar.jsx'
 import { authApi, authTokenStorageKey } from './lib/api.js'
 import HomePage from './pages/HomePage.jsx'
 import LoginPage from './pages/LoginPage.jsx'
+import VMTerminalPage from './pages/VMTerminalPage.jsx'
 import VMCollectionPage from './pages/VMCollectionPage.jsx'
 import YourVMsPage from './pages/YourVMsPage.jsx'
 
@@ -124,6 +125,16 @@ function App() {
             element={
               currentUser ? (
                 <YourVMsPage authToken={authToken} currentUser={currentUser} />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/rentals/:rentalId/terminal"
+            element={
+              currentUser ? (
+                <VMTerminalPage authToken={authToken} currentUser={currentUser} />
               ) : (
                 <Navigate to="/login" replace />
               )

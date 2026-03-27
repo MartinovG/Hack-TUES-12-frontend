@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { apiHost, rentalsApi, vmApi } from '../lib/api.js'
 
 function YourVMsPage({ authToken, currentUser }) {
@@ -263,13 +264,23 @@ function RentalCard({ rental }) {
     <article className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
       <div className="space-y-4">
         <div className="space-y-2">
-          <div className="flex flex-wrap items-center gap-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-lime-200/80">
-              Selected VM
-            </p>
-            <span className="rounded-full border border-emerald-200/10 bg-emerald-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-100">
-              {formatVmLifecycleState(vm.status)}
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-lime-200/80">
+                Selected VM
+              </p>
+              <span className="rounded-full border border-emerald-200/10 bg-emerald-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-100">
+                {formatVmLifecycleState(vm.status)}
+              </span>
+            </div>
+            {vm.status === 'running' ? (
+              <Link
+                to={`/rentals/${rental.id}/terminal`}
+                className="rounded-full bg-lime-300 px-4 py-2 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-lime-200"
+              >
+                Manage VM
+              </Link>
+            ) : null}
           </div>
           <h2 className="text-2xl font-semibold text-white">{vm.name}</h2>
           <p className="text-sm leading-7 text-stone-300">Rental ID: {rental.id}</p>

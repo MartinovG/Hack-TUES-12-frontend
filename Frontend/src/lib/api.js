@@ -137,3 +137,20 @@ export const rentalsApi = {
     })
   },
 }
+
+export const jobsApi = {
+  list(rentalId, token, options = {}) {
+    return request(`/rentals/${rentalId}/jobs`, {
+      token,
+      signal: options.signal,
+    })
+  },
+  create(rentalId, payload, token, options = {}) {
+    return request(`/rentals/${rentalId}/jobs`, {
+      method: 'POST',
+      body: payload,
+      token,
+      signal: options.signal,
+    })
+  },
+}
