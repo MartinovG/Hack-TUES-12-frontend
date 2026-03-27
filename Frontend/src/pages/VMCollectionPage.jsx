@@ -35,6 +35,7 @@ function VMCollectionPage({ authToken }) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [newVm, setNewVm] = useState(initialVmForm)
   const [errorMessage, setErrorMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmittingSelection, setIsSubmittingSelection] = useState(false)
   const [isCreatingVm, setIsCreatingVm] = useState(false)
@@ -155,9 +156,10 @@ function VMCollectionPage({ authToken }) {
     event.preventDefault()
     setIsCreatingVm(true)
     setErrorMessage('')
+    setSuccessMessage('')
 
     try {
-      await vmApi.create(
+      const createdVm = await vmApi.create(
         {
           name: newVm.name,
           cpuCores: Number(newVm.cpuCores),
@@ -175,6 +177,9 @@ function VMCollectionPage({ authToken }) {
 
       setIsAddModalOpen(false)
       setNewVm(initialVmForm)
+      setSuccessMessage(
+        `VM ${createdVm.name} was created in configuring state. Finish setup from Your VMs using its connection key.`,
+      )
       await refreshVms()
     } catch (error) {
       setErrorMessage(error.message)
@@ -214,8 +219,8 @@ function VMCollectionPage({ authToken }) {
               VM Collection
             </h1>
             <p className="text-base leading-8 text-stone-300">
-              This page now reads directly from `GET /vms` and shows only resources with
-              `status=available`, so what you see here should match the live backend data.
+              This page now reads directly from `GET /vms` and shows only resources marked as
+              `available`, so what you see here should match the live backend data.
             </p>
           </div>
 
@@ -281,6 +286,12 @@ function VMCollectionPage({ authToken }) {
         {errorMessage ? (
           <div className="mt-4 rounded-2xl border border-rose-400/20 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">
             {errorMessage}
+          </div>
+        ) : null}
+
+        {successMessage ? (
+          <div className="mt-4 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-50">
+            {successMessage}
           </div>
         ) : null}
       </section>

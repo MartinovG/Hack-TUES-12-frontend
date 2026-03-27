@@ -1,4 +1,6 @@
-export const apiHost = import.meta.env.VITE_API_URL || 'http://localhost:3000'
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim()
+
+export const apiHost = configuredApiUrl || ''
 export const authTokenStorageKey = 'vm-sharing-access-token'
 
 async function request(path, { method = 'GET', body, token, signal } = {}) {
@@ -12,12 +14,26 @@ async function request(path, { method = 'GET', body, token, signal } = {}) {
     headers.Authorization = `Bearer ${token}`
   }
 
-  const response = await fetch(`${apiHost}${path}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-    signal,
-  })
+  let response
+
+  try {
+    response = await fetch(`${apiHost}${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+      signal,
+    })
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      throw error
+    }
+
+    const target = apiHost || 'the current frontend origin'
+
+    throw new Error(
+      `Could not reach the API at ${target}. Make sure the backend is running and VITE_API_URL is correct.`,
+    )
+  }
 
   const responseText = await response.text()
   const payload = responseText ? JSON.parse(responseText) : null
@@ -27,7 +43,9 @@ async function request(path, { method = 'GET', body, token, signal } = {}) {
       ? payload.message.join(', ')
       : payload?.message || 'Request failed'
 
-    throw new Error(message)
+    const error = new Error(message)
+    error.status = response.status
+    throw error
   }
 
   return payload

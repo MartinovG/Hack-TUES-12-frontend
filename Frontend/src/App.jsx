@@ -7,11 +7,28 @@ import LoginPage from './pages/LoginPage.jsx'
 import VMCollectionPage from './pages/VMCollectionPage.jsx'
 import YourVMsPage from './pages/YourVMsPage.jsx'
 
+const currentUserStorageKey = 'vm-sharing-current-user'
+
+function readStoredUser() {
+  const rawValue = localStorage.getItem(currentUserStorageKey)
+
+  if (!rawValue) {
+    return null
+  }
+
+  try {
+    return JSON.parse(rawValue)
+  } catch {
+    localStorage.removeItem(currentUserStorageKey)
+    return null
+  }
+}
+
 function App() {
   const [authToken, setAuthToken] = useState(() =>
     localStorage.getItem(authTokenStorageKey),
   )
-  const [currentUser, setCurrentUser] = useState(null)
+  const [currentUser, setCurrentUser] = useState(() => readStoredUser())
   const [isAuthReady, setIsAuthReady] = useState(false)
 
   useEffect(() => {
@@ -29,15 +46,21 @@ function App() {
           signal: abortController.signal,
         })
 
-        setCurrentUser({
+        const nextUser = {
           id: profile.id,
           username: profile.username,
           email: profile.email,
-        })
-      } catch {
-        localStorage.removeItem(authTokenStorageKey)
-        setAuthToken(null)
-        setCurrentUser(null)
+        }
+
+        localStorage.setItem(currentUserStorageKey, JSON.stringify(nextUser))
+        setCurrentUser(nextUser)
+      } catch (error) {
+        if (error?.status === 401 || error?.status === 403) {
+          localStorage.removeItem(authTokenStorageKey)
+          localStorage.removeItem(currentUserStorageKey)
+          setAuthToken(null)
+          setCurrentUser(null)
+        }
       } finally {
         setIsAuthReady(true)
       }
@@ -52,6 +75,7 @@ function App() {
 
   const handleAuthSuccess = ({ access_token, user }) => {
     localStorage.setItem(authTokenStorageKey, access_token)
+    localStorage.setItem(currentUserStorageKey, JSON.stringify(user))
     setAuthToken(access_token)
     setCurrentUser(user)
     setIsAuthReady(true)
@@ -59,6 +83,7 @@ function App() {
 
   const handleLogout = () => {
     localStorage.removeItem(authTokenStorageKey)
+    localStorage.removeItem(currentUserStorageKey)
     setAuthToken(null)
     setCurrentUser(null)
   }
