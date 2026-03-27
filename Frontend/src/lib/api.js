@@ -1,9 +1,19 @@
 const configuredApiUrl = import.meta.env.VITE_API_URL?.trim()
 
-// If VITE_API_URL isn't provided, default to same-origin.
-// This is important when the frontend is hosted remotely and `localhost` would point
-// to the visitor's machine.
-export const apiHost = configuredApiUrl || window.location.origin
+// Production-safe default.
+// If a build accidentally bakes in localhost, users will try to call their own machine.
+// We hard-default to the public backend endpoint instead.
+const PUBLIC_BACKEND_FALLBACK = 'http://178.104.63.93:3000'
+
+function isLocalhostUrl(url) {
+  if (!url) return false
+  return /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(url)
+}
+
+export const apiHost =
+  configuredApiUrl && !isLocalhostUrl(configuredApiUrl)
+    ? configuredApiUrl
+    : PUBLIC_BACKEND_FALLBACK
 export const authTokenStorageKey = 'vm-sharing-access-token'
 
 async function request(path, { method = 'GET', body, token, signal } = {}) {
