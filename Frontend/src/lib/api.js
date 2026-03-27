@@ -1,6 +1,9 @@
 const configuredApiUrl = import.meta.env.VITE_API_URL?.trim()
 
-export const apiHost = configuredApiUrl || ''
+// If VITE_API_URL isn't provided, default to same-origin.
+// This is important when the frontend is hosted remotely and `localhost` would point
+// to the visitor's machine.
+export const apiHost = configuredApiUrl || window.location.origin
 export const authTokenStorageKey = 'vm-sharing-access-token'
 
 async function request(path, { method = 'GET', body, token, signal } = {}) {
