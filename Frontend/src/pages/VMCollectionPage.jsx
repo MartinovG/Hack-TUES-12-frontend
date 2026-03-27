@@ -178,7 +178,7 @@ function VMCollectionPage({ authToken }) {
       setIsAddModalOpen(false)
       setNewVm(initialVmForm)
       setSuccessMessage(
-        `VM ${createdVm.name} was created in configuring state. Finish setup from Your VMs using its connection key.`,
+        `Laptop ${createdVm.name} was created in building state. Finish setup from Your VMs & Computers using its connection key.`,
       )
       await refreshVms()
     } catch (error) {
@@ -196,7 +196,7 @@ function VMCollectionPage({ authToken }) {
     try {
       await rentalsApi.create(selectedVm.id, authToken)
       setSelectionMessage(
-        'Rental created successfully. The VM will disappear from the available list after refresh.',
+        'Rental created successfully. The laptop will disappear from the available list after refresh.',
       )
       await refreshVms()
       setSelectedVm(null)
@@ -216,11 +216,11 @@ function VMCollectionPage({ authToken }) {
               Live Resource Catalog
             </p>
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-              VM Collection
+              Laptops Collection
             </h1>
             <p className="text-base leading-8 text-stone-300">
-              This page now reads directly from `GET /vms` and shows only resources marked as
-              `available`, so what you see here should match the live backend data.
+              Browse the laptops that are currently connected, configured, and ready to be assigned
+              to someone who needs computing access.
             </p>
           </div>
 
@@ -229,7 +229,7 @@ function VMCollectionPage({ authToken }) {
             onClick={() => setIsAddModalOpen(true)}
             className="rounded-full bg-lime-300 px-5 py-3 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-lime-200"
           >
-            Add VM
+            Add Laptop
           </button>
         </div>
 
@@ -239,7 +239,7 @@ function VMCollectionPage({ authToken }) {
             name="search"
             value={searchQuery}
             onChange={(event) => setSearchQuery(event.target.value)}
-            placeholder="Search by VM name, CPU, RAM, OS, status, or price"
+            placeholder="Search by computer name, CPU, RAM, OS, status, or price"
           />
           <FilterInput
             label="Min CPU cores"
@@ -279,7 +279,7 @@ function VMCollectionPage({ authToken }) {
             Has GPU
           </label>
           <div className="rounded-2xl border border-emerald-200/10 bg-emerald-300/5 px-4 py-3 text-sm text-stone-300">
-            {filteredVms.length} VM{filteredVms.length === 1 ? '' : 's'} found
+            {filteredVms.length} laptop{filteredVms.length === 1 ? '' : 's'} found
           </div>
         </div>
 
@@ -298,7 +298,7 @@ function VMCollectionPage({ authToken }) {
 
       {isLoading ? (
         <section className="rounded-[2rem] border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
-          <p className="text-lg text-white">Loading available VMs from the backend...</p>
+          <p className="text-lg text-white">Loading available laptops from the backend...</p>
         </section>
       ) : (
         <section className="grid gap-5">
@@ -312,15 +312,15 @@ function VMCollectionPage({ authToken }) {
                   <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-3">
                       <p className="text-xs font-semibold uppercase tracking-[0.28em] text-lime-200/80">
-                        Available VM
+                        Available Laptop
                       </p>
                       <span className="rounded-full border border-emerald-200/10 bg-emerald-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-100">
-                        {vm.status}
+                        {formatVmLifecycleState(vm.status)}
                       </span>
                     </div>
                     <h2 className="text-2xl font-semibold text-white">{vm.name}</h2>
                     <p className="max-w-3xl text-sm leading-7 text-stone-300">
-                      Ready for rental. This entry is being pulled from the backend VM inventory.
+                      Ready to be assigned. This laptop is currently available in the shared device pool.
                     </p>
                   </div>
 
@@ -366,9 +366,9 @@ function VMCollectionPage({ authToken }) {
 
           {filteredVms.length === 0 ? (
             <article className="rounded-[2rem] border border-dashed border-white/15 bg-white/5 p-10 text-center backdrop-blur-xl">
-              <p className="text-xl font-semibold text-white">No available VMs match this filter.</p>
+              <p className="text-xl font-semibold text-white">No available laptops match this filter.</p>
               <p className="mt-3 text-sm leading-7 text-stone-300">
-                Adjust the backend filters or register a new VM with the add form.
+                Adjust the filters or register a new laptop with the add form.
               </p>
             </article>
           ) : null}
@@ -379,7 +379,7 @@ function VMCollectionPage({ authToken }) {
         <ModalShell title={`Assign ${selectedVm.name}`}>
           <form className="space-y-5" onSubmit={handleSendSelection}>
             <p className="text-sm leading-7 text-stone-300">
-              This action now calls `POST /rentals` for the selected VM. The operating system
+              This action now calls `POST /rentals` for the selected laptop. The operating system
               choice stays in the frontend flow for now because the current backend rental endpoint
               does not accept an OS override.
             </p>
@@ -426,12 +426,12 @@ function VMCollectionPage({ authToken }) {
       ) : null}
 
       {isAddModalOpen ? (
-        <ModalShell title="Register a new VM">
+        <ModalShell title="Register a New Laptop">
           <form className="space-y-4" onSubmit={handleCreateVm}>
             <div className="grid gap-4 sm:grid-cols-2">
               <FormInput
                 name="name"
-                label="VM Name"
+                label="Laptop Name"
                 value={newVm.name}
                 onChange={handleVmFieldChange}
                 placeholder="Shared Dev Workstation"
@@ -594,3 +594,19 @@ function ModalShell({ title, children }) {
 }
 
 export default VMCollectionPage
+
+function formatVmLifecycleState(status) {
+  if (status === 'configuring' || status === 'building') {
+    return 'building'
+  }
+
+  if (status === 'running') {
+    return 'running'
+  }
+
+  if (status === 'failed') {
+    return 'failed'
+  }
+
+  return 'completed'
+}

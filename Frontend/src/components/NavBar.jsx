@@ -5,8 +5,8 @@ function NavBar({ currentUser, onLogout }) {
     { label: 'Home Page', to: '/' },
     ...(currentUser
       ? [
-          { label: 'VM Collection', to: '/vm-collection' },
-          { label: 'Your VMs', to: '/your-vms' },
+          { label: 'Laptops Collection', to: '/vm-collection' },
+          { label: 'Your VMs & Computers', to: '/your-vms' },
         ]
       : []),
   ]
