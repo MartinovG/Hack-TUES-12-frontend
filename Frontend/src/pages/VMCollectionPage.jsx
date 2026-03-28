@@ -315,7 +315,10 @@ function VMCollectionPage({ authToken }) {
                         Available Laptop
                       </p>
                       <span className="rounded-full border border-emerald-200/10 bg-emerald-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-100">
-                        {formatVmLifecycleState(vm.status)}
+                        On
+                      </span>
+                      <span className="rounded-full border border-emerald-200/10 bg-emerald-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-100">
+                        Not Using
                       </span>
                     </div>
                     <h2 className="text-2xl font-semibold text-white">{vm.name}</h2>
@@ -594,19 +597,3 @@ function ModalShell({ title, children }) {
 }
 
 export default VMCollectionPage
-
-function formatVmLifecycleState(status) {
-  if (status === 'configuring' || status === 'building') {
-    return 'building'
-  }
-
-  if (status === 'running') {
-    return 'running'
-  }
-
-  if (status === 'failed') {
-    return 'failed'
-  }
-
-  return 'completed'
-}
