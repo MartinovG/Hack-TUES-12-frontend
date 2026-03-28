@@ -17,7 +17,6 @@ const initialVmForm = {
   gpuVramGb: '',
   ramGb: '',
   storageGb: '',
-  os: operatingSystems[0],
   pricePerHour: '',
 }
 
@@ -169,7 +168,7 @@ function VMCollectionPage({ authToken }) {
           gpuVramGb: newVm.gpuVramGb ? Number(newVm.gpuVramGb) : undefined,
           ramGb: Number(newVm.ramGb),
           storageGb: Number(newVm.storageGb),
-          os: newVm.os,
+          os: operatingSystems[0],
           pricePerHour: Number(newVm.pricePerHour),
         },
         authToken,
@@ -499,21 +498,6 @@ function VMCollectionPage({ authToken }) {
                 onChange={handleVmFieldChange}
                 placeholder="10"
               />
-              <label className="block space-y-2">
-                <span className="text-sm font-medium text-stone-100">Operating System</span>
-                <select
-                  name="os"
-                  value={newVm.os}
-                  onChange={handleVmFieldChange}
-                  className="w-full rounded-2xl border border-white/10 bg-stone-950/70 px-4 py-3 text-stone-100 outline-none transition focus:border-lime-300/50 focus:ring-2 focus:ring-lime-300/20"
-                >
-                  {operatingSystems.map((operatingSystem) => (
-                    <option key={operatingSystem} value={operatingSystem}>
-                      {operatingSystem}
-                    </option>
-                  ))}
-                </select>
-              </label>
               <FormInput
                 name="pricePerHour"
                 label="Price per Hour"
