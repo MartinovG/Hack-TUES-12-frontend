@@ -11,6 +11,7 @@ function VMTerminalPage({ authToken, currentUser }) {
   const [successMessage, setSuccessMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isStopping, setIsStopping] = useState(false)
 
   useEffect(() => {
     const abortController = new AbortController()
@@ -119,6 +120,39 @@ function VMTerminalPage({ authToken, currentUser }) {
     }
   }
 
+  const handleStopVm = async () => {
+    if (!rental) {
+      return
+    }
+
+    setIsStopping(true)
+    setErrorMessage('')
+    setSuccessMessage('')
+
+    try {
+      await rentalsApi.end(rental.id, authToken)
+      setRental((currentRental) =>
+        currentRental
+          ? {
+              ...currentRental,
+              rentalState: 'not_active',
+              vm: currentRental.vm
+                ? {
+                    ...currentRental.vm,
+                    status: 'offline',
+                  }
+                : currentRental.vm,
+            }
+          : currentRental,
+      )
+      setSuccessMessage('The VM stop request was sent successfully. This session is now completed.')
+    } catch (error) {
+      setErrorMessage(error.message)
+    } finally {
+      setIsStopping(false)
+    }
+  }
+
   if (!currentUser) {
     return <Navigate to="/login" replace />
   }
@@ -172,7 +206,10 @@ function VMTerminalPage({ authToken, currentUser }) {
               <div className="grid gap-4 md:grid-cols-4">
                 <TerminalMeta label="VM Name" value={rental.vm?.name || 'Unknown VM'} />
                 <TerminalMeta label="Rental ID" value={rental.id} />
-                <TerminalMeta label="VM Status" value={rental.vm?.status || 'unknown'} />
+                <TerminalMeta
+                  label="VM Status"
+                  value={formatTerminalVmStatus(rental.vm?.status || 'unknown')}
+                />
                 <TerminalMeta label="Selected At" value={new Date(rental.startTime).toLocaleString()} />
               </div>
             </section>
@@ -196,13 +233,23 @@ function VMTerminalPage({ authToken, currentUser }) {
                     ? 'This VM is running and ready to receive commands.'
                     : 'Commands are available only while the VM is in running state.'}
                 </p>
-                <button
-                  type="submit"
-                  disabled={!isRunning || isSubmitting}
-                  className="rounded-full bg-lime-300 px-5 py-3 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSubmitting ? 'Sending...' : 'Run Command'}
-                </button>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={handleStopVm}
+                    disabled={!isRunning || isStopping}
+                    className="rounded-full border border-rose-300/20 bg-rose-400/10 px-5 py-3 text-sm font-semibold text-rose-100 transition hover:-translate-y-0.5 hover:bg-rose-400/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isStopping ? 'Stopping...' : 'Stop VM'}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={!isRunning || isSubmitting || isStopping}
+                    className="rounded-full bg-lime-300 px-5 py-3 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSubmitting ? 'Sending...' : 'Run Command'}
+                  </button>
+                </div>
               </div>
             </form>
           </section>
@@ -257,6 +304,22 @@ function TerminalMeta({ label, value }) {
       <p className="mt-2 break-words text-sm leading-6 text-stone-200">{value}</p>
     </div>
   )
+}
+
+function formatTerminalVmStatus(status) {
+  if (status === 'running') {
+    return 'running'
+  }
+
+  if (status === 'building' || status === 'configuring') {
+    return 'building'
+  }
+
+  if (status === 'failed') {
+    return 'failed'
+  }
+
+  return 'completed'
 }
 
 export default VMTerminalPage

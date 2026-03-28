@@ -136,6 +136,13 @@ export const rentalsApi = {
       signal: options.signal,
     })
   },
+  end(rentalId, token, options = {}) {
+    return request(`/rentals/${rentalId}/end`, {
+      method: 'PATCH',
+      token,
+      signal: options.signal,
+    })
+  },
 }
 
 export const jobsApi = {
