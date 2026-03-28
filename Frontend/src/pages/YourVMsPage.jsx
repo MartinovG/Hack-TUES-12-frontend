@@ -73,7 +73,7 @@ function YourVMsPage({ authToken, currentUser }) {
     setSuccessMessage('')
 
     try {
-      await navigator.clipboard.writeText(connectionToken)
+      await copyTextToClipboard(connectionToken)
       setSuccessMessage('Setup key copied. Paste it into the Python agent when prompted.')
     } catch {
       setErrorMessage('Could not copy the setup key automatically. Copy it manually from the card.')
@@ -354,6 +354,30 @@ function formatDate(value) {
 }
 
 export default YourVMsPage
+
+async function copyTextToClipboard(value) {
+  if (navigator.clipboard?.writeText && window.isSecureContext) {
+    await navigator.clipboard.writeText(value)
+    return
+  }
+
+  const textArea = document.createElement('textarea')
+  textArea.value = value
+  textArea.setAttribute('readonly', '')
+  textArea.style.position = 'fixed'
+  textArea.style.top = '-9999px'
+  textArea.style.left = '-9999px'
+  document.body.appendChild(textArea)
+  textArea.focus()
+  textArea.select()
+
+  const wasCopied = document.execCommand('copy')
+  document.body.removeChild(textArea)
+
+  if (!wasCopied) {
+    throw new Error('Clipboard copy failed')
+  }
+}
 
 function formatVmLifecycleState(status) {
   if (status === 'configuring' || status === 'building') {
