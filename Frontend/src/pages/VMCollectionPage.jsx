@@ -306,63 +306,68 @@ function VMCollectionPage({ authToken }) {
               key={vm.id}
               className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-xl"
             >
-              <div className="flex flex-col gap-6 lg:flex-row lg:justify-between">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-lime-200/80">
-                        Available Laptop
-                      </p>
-                      <span className="rounded-full border border-emerald-200/10 bg-emerald-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-100">
-                        On
-                      </span>
-                      <span className="rounded-full border border-emerald-200/10 bg-emerald-300/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] text-emerald-100">
-                        Not Using
-                      </span>
+              {(() => {
+                const powerState = getLaptopPowerState(vm)
+
+                return (
+                  <div className="flex flex-col gap-6 lg:flex-row lg:justify-between">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex flex-wrap items-center gap-3">
+                          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-lime-200/80">
+                            Available Laptop
+                          </p>
+                          <StatusPill label={powerState} tone={powerState === 'On' ? 'green' : 'slate'} />
+                          {powerState === 'On' ? (
+                            <StatusPill label="Not Using" tone="green" />
+                          ) : null}
+                        </div>
+                        <h2 className="text-2xl font-semibold text-white">{vm.name}</h2>
+                        <p className="max-w-3xl text-sm leading-7 text-stone-300">
+                          Ready to be assigned. This laptop is currently available in the shared device pool.
+                        </p>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                        <SpecCard label="CPU Model" value={vm.cpuModel} />
+                        <SpecCard label="CPU Cores" value={vm.cpuCores} />
+                        <SpecCard label="Frequency" value={`${vm.cpuFrequencyGhz} GHz`} />
+                        <SpecCard label="RAM" value={`${vm.ramGb} GB`} />
+                        <SpecCard label="Storage" value={`${vm.storageGb} GB`} />
+                        <SpecCard label="GPU" value={vm.gpuModel || 'No dedicated GPU'} />
+                        <SpecCard
+                          label="GPU VRAM"
+                          value={vm.gpuVramGb ? `${vm.gpuVramGb} GB` : 'N/A'}
+                        />
+                        <SpecCard label="OS" value={vm.os} />
+                        <SpecCard label="Price / Hour" value={`$${vm.pricePerHour}`} />
+                        <SpecCard label="Provider ID" value={vm.providerId} />
+                        <SpecCard label="Last Heartbeat" value={formatDate(vm.lastHeartbeat)} />
+                      </div>
                     </div>
-                    <h2 className="text-2xl font-semibold text-white">{vm.name}</h2>
-                    <p className="max-w-3xl text-sm leading-7 text-stone-300">
-                      Ready to be assigned. This laptop is currently available in the shared device pool.
-                    </p>
-                  </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                    <SpecCard label="CPU Model" value={vm.cpuModel} />
-                    <SpecCard label="CPU Cores" value={vm.cpuCores} />
-                    <SpecCard label="Frequency" value={`${vm.cpuFrequencyGhz} GHz`} />
-                    <SpecCard label="RAM" value={`${vm.ramGb} GB`} />
-                    <SpecCard label="Storage" value={`${vm.storageGb} GB`} />
-                    <SpecCard label="GPU" value={vm.gpuModel || 'No dedicated GPU'} />
-                    <SpecCard
-                      label="GPU VRAM"
-                      value={vm.gpuVramGb ? `${vm.gpuVramGb} GB` : 'N/A'}
-                    />
-                    <SpecCard label="OS" value={vm.os} />
-                    <SpecCard label="Price / Hour" value={`$${vm.pricePerHour}`} />
-                    <SpecCard label="Provider ID" value={vm.providerId} />
-                  </div>
-                </div>
+                    <div className="flex min-w-[16rem] flex-col justify-between gap-4 rounded-[1.5rem] border border-white/10 bg-stone-950/35 p-5">
+                      <div>
+                        <p className="text-xs font-semibold uppercase tracking-[0.28em] text-stone-400">
+                          Next step
+                        </p>
+                        <p className="mt-2 text-sm leading-7 text-stone-300">
+                          Open the assignment modal, pick an operating system, and send the rental
+                          request to the backend.
+                        </p>
+                      </div>
 
-                <div className="flex min-w-[16rem] flex-col justify-between gap-4 rounded-[1.5rem] border border-white/10 bg-stone-950/35 p-5">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.28em] text-stone-400">
-                      Next step
-                    </p>
-                    <p className="mt-2 text-sm leading-7 text-stone-300">
-                      Open the assignment modal, pick an operating system, and send the rental
-                      request to the backend.
-                    </p>
+                      <button
+                        type="button"
+                        onClick={() => handleSelectVm(vm)}
+                        className="rounded-full bg-white px-4 py-3 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-lime-200"
+                      >
+                        Select
+                      </button>
+                    </div>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSelectVm(vm)}
-                    className="rounded-full bg-white px-4 py-3 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-lime-200"
-                  >
-                    Select
-                  </button>
-                </div>
-              </div>
+                )
+              })()}
             </article>
           ))}
 
@@ -554,6 +559,43 @@ function SpecCard({ label, value }) {
       <p className="mt-2 break-words text-sm leading-6 text-stone-200">{value}</p>
     </div>
   )
+}
+
+function StatusPill({ label, tone }) {
+  const toneClasses =
+    tone === 'green'
+      ? 'border-emerald-200/10 bg-emerald-300/10 text-emerald-100'
+      : tone === 'amber'
+        ? 'border-amber-200/10 bg-amber-300/10 text-amber-100'
+        : 'border-white/10 bg-white/5 text-stone-200'
+
+  return (
+    <span
+      className={`rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.25em] ${toneClasses}`}
+    >
+      {label}
+    </span>
+  )
+}
+
+function getLaptopPowerState(vm) {
+  if (!vm.lastHeartbeat) {
+    const onlineStatuses = ['available', 'building', 'running', 'shutting_down']
+    return onlineStatuses.includes(vm.status) ? 'On' : 'Off'
+  }
+
+  const lastHeartbeatTime = new Date(vm.lastHeartbeat).getTime()
+  const ageInMilliseconds = Date.now() - lastHeartbeatTime
+
+  return ageInMilliseconds <= 90_000 ? 'On' : 'Off'
+}
+
+function formatDate(value) {
+  if (!value) {
+    return 'No heartbeat yet'
+  }
+
+  return new Date(value).toLocaleString()
 }
 
 function FormInput({ label, required = true, ...props }) {

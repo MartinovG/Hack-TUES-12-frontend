@@ -10,9 +10,39 @@ function isLocalhostUrl(url) {
   return /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/i.test(url)
 }
 
-export const apiHost =
-  configuredApiUrl && !isLocalhostUrl(configuredApiUrl)
+function getBrowserOrigin() {
+  if (typeof window === 'undefined' || !window.location?.origin) {
+    return ''
+  }
+
+  return window.location.origin
+}
+
+function getOrigin(url) {
+  if (!url) return ''
+
+  try {
+    return new URL(url).origin
+  } catch {
+    return ''
+  }
+}
+
+const browserOrigin = getBrowserOrigin()
+const configuredOrigin = getOrigin(configuredApiUrl)
+
+const resolvedConfiguredApiUrl =
+  configuredApiUrl &&
+  !isLocalhostUrl(configuredApiUrl) &&
+  (!browserOrigin || !configuredOrigin || browserOrigin === configuredOrigin)
     ? configuredApiUrl
+    : ''
+
+export const apiHost =
+  resolvedConfiguredApiUrl ||
+  browserOrigin ||
+  (configuredApiUrl && !isLocalhostUrl(configuredApiUrl))
+    ? resolvedConfiguredApiUrl || browserOrigin || configuredApiUrl
     : PUBLIC_BACKEND_FALLBACK
 export const authTokenStorageKey = 'vm-sharing-access-token'
 
