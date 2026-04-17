@@ -31,19 +31,25 @@ function getOrigin(url) {
 const browserOrigin = getBrowserOrigin()
 const configuredOrigin = getOrigin(configuredApiUrl)
 
-const resolvedConfiguredApiUrl =
-  configuredApiUrl &&
-  !isLocalhostUrl(configuredApiUrl) &&
-  (!browserOrigin || !configuredOrigin || browserOrigin === configuredOrigin)
-    ? configuredApiUrl
-    : ''
+function resolveApiHost() {
+  if (configuredApiUrl) {
+    return configuredApiUrl
+  }
 
-export const apiHost =
-  resolvedConfiguredApiUrl ||
-  browserOrigin ||
-  (configuredApiUrl && !isLocalhostUrl(configuredApiUrl))
-    ? resolvedConfiguredApiUrl || browserOrigin || configuredApiUrl
-    : PUBLIC_BACKEND_FALLBACK
+  // If the frontend and backend share an origin through a reverse proxy,
+  // using the browser origin keeps local and production deployments simple.
+  if (browserOrigin && configuredOrigin && browserOrigin === configuredOrigin) {
+    return browserOrigin
+  }
+
+  if (browserOrigin && !isLocalhostUrl(browserOrigin)) {
+    return browserOrigin
+  }
+
+  return PUBLIC_BACKEND_FALLBACK
+}
+
+export const apiHost = resolveApiHost()
 export const authTokenStorageKey = 'vm-sharing-access-token'
 
 async function request(path, { method = 'GET', body, token, signal } = {}) {
@@ -146,6 +152,48 @@ export const vmApi = {
       method: 'PATCH',
       body: { status },
       token,
+      signal: options.signal,
+    })
+  },
+  async downloadConnector(vmId, token, options = {}) {
+    const response = await fetch(`${apiHost}/vms/${vmId}/download-connector`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      signal: options.signal,
+    })
+
+    if (!response.ok) {
+      let message = 'Could not download connector bundle'
+
+      try {
+        const payload = await response.json()
+        message = Array.isArray(payload?.message)
+          ? payload.message.join(', ')
+          : payload?.message || message
+      } catch {
+        // Ignore parse errors and keep the generic message.
+      }
+
+      const error = new Error(message)
+      error.status = response.status
+      throw error
+    }
+
+    const blob = await response.blob()
+    const disposition = response.headers.get('content-disposition') || ''
+    const fileNameMatch = disposition.match(/filename=\"?([^"]+)\"?/)
+
+    return {
+      blob,
+      filename: fileNameMatch?.[1] || `provider-connector-${vmId}.zip`,
+    }
+  },
+}
+
+export const downloadApi = {
+  desktopApps(options = {}) {
+    return request('/download/desktop-apps', {
       signal: options.signal,
     })
   },

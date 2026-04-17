@@ -1,13 +1,21 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { apiHost, rentalsApi, vmApi } from '../lib/api.js'
+import { apiHost, downloadApi, rentalsApi, vmApi } from '../lib/api.js'
+
+const desktopPlatforms = [
+  { key: 'linux', label: 'Download Linux App' },
+  { key: 'windows', label: 'Download Windows App' },
+  { key: 'macos', label: 'Download macOS App' },
+]
 
 function YourVMsPage({ authToken, currentUser }) {
   const [vms, setVms] = useState([])
   const [rentals, setRentals] = useState([])
+  const [desktopArtifacts, setDesktopArtifacts] = useState([])
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [downloadingVmId, setDownloadingVmId] = useState('')
 
   useEffect(() => {
     const abortController = new AbortController()
@@ -17,12 +25,14 @@ function YourVMsPage({ authToken, currentUser }) {
       setErrorMessage('')
 
       try {
-        const [vmResponse, rentalResponse] = await Promise.all([
+        const [vmResponse, rentalResponse, desktopResponse] = await Promise.all([
           vmApi.list({}, { signal: abortController.signal }),
           rentalsApi.list(authToken, { signal: abortController.signal }),
+          downloadApi.desktopApps({ signal: abortController.signal }),
         ])
         setVms(vmResponse)
         setRentals(rentalResponse)
+        setDesktopArtifacts(desktopResponse.artifacts || [])
       } catch (error) {
         if (!abortController.signal.aborted) {
           setErrorMessage(error.message)
@@ -68,15 +78,49 @@ function YourVMsPage({ authToken, currentUser }) {
     return new Map(activeRentals.map((rental) => [rental.vmId, rental]))
   }, [currentUser.id, rentals])
 
+  const desktopArtifactsByPlatform = useMemo(() => {
+    return desktopArtifacts.reduce((accumulator, artifact) => {
+      if (!accumulator[artifact.platform]) {
+        accumulator[artifact.platform] = artifact
+      }
+      return accumulator
+    }, {})
+  }, [desktopArtifacts])
+
   const handleCopySetupKey = async (connectionToken) => {
     setErrorMessage('')
     setSuccessMessage('')
 
     try {
       await copyTextToClipboard(connectionToken)
-      setSuccessMessage('Setup key copied. Paste it into the Python agent when prompted.')
+      setSuccessMessage('Setup key copied.')
     } catch {
       setErrorMessage('Could not copy the setup key automatically. Copy it manually from the card.')
+    }
+  }
+
+  const handleDownloadConnector = async (vm) => {
+    setErrorMessage('')
+    setSuccessMessage('')
+    setDownloadingVmId(vm.id)
+
+    try {
+      const { blob, filename } = await vmApi.downloadConnector(vm.id, authToken)
+      const downloadUrl = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+
+      link.href = downloadUrl
+      link.download = filename
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(downloadUrl)
+
+      setSuccessMessage(`Connector downloaded for ${vm.name}.`)
+    } catch (error) {
+      setErrorMessage(error.message)
+    } finally {
+      setDownloadingVmId('')
     }
   }
 
@@ -84,15 +128,11 @@ function YourVMsPage({ authToken, currentUser }) {
     <main className="flex flex-1 flex-col gap-6 pb-10">
       <section className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-xl sm:p-8">
         <p className="text-xs font-semibold uppercase tracking-[0.35em] text-lime-200/80">
-          Provider Inventory
+          Dashboard
         </p>
         <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl">
           Your VMs & Computers
         </h1>
-        <p className="mt-4 max-w-3xl text-base leading-8 text-stone-300">
-          This page combines the VMs you created with the VMs you selected through rentals, so
-          both providers and renters can track their current machines in one place.
-        </p>
       </section>
 
       {errorMessage ? (
@@ -109,14 +149,11 @@ function YourVMsPage({ authToken, currentUser }) {
 
       {isLoading ? (
         <section className="rounded-[2rem] border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
-          <p className="text-lg text-white">Loading your dashboard from the backend...</p>
+          <p className="text-lg text-white">Loading...</p>
         </section>
       ) : ownedVms.length === 0 && selectedRentals.length === 0 ? (
         <section className="rounded-[2rem] border border-dashed border-white/15 bg-white/5 p-10 text-center backdrop-blur-xl">
-          <p className="text-xl font-semibold text-white">You do not have any laptops or VMs here yet.</p>
-          <p className="mt-3 text-sm leading-7 text-stone-300">
-            Create a laptop as a provider or select one from the collection and it will appear here.
-          </p>
+          <p className="text-xl font-semibold text-white">Nothing here yet.</p>
         </section>
       ) : (
         <div className="grid gap-8">
@@ -126,15 +163,11 @@ function YourVMsPage({ authToken, currentUser }) {
                 Selected By You
               </p>
               <h2 className="text-2xl font-semibold text-white">Selected VMs</h2>
-              <p className="text-sm leading-7 text-stone-300">
-                These are the machines you have selected as a renter. They leave the public list,
-                but they stay visible here while the rental is active.
-              </p>
             </div>
 
             {selectedRentals.length === 0 ? (
               <article className="rounded-[2rem] border border-dashed border-white/15 bg-white/5 p-8 text-center backdrop-blur-xl">
-                <p className="text-lg font-semibold text-white">You have not selected any VMs yet.</p>
+                <p className="text-lg font-semibold text-white">No selected VMs.</p>
               </article>
             ) : (
               selectedRentals.map((rental) => (
@@ -153,7 +186,7 @@ function YourVMsPage({ authToken, currentUser }) {
 
             {ownedVms.length === 0 ? (
               <article className="rounded-[2rem] border border-dashed border-white/15 bg-white/5 p-8 text-center backdrop-blur-xl">
-                <p className="text-lg font-semibold text-white">You have not created any laptops yet.</p>
+                <p className="text-lg font-semibold text-white">No created laptops.</p>
               </article>
             ) : (
               ownedVms.map((vm) => {
@@ -213,26 +246,12 @@ function YourVMsPage({ authToken, currentUser }) {
                           />
                         </div>
 
-                        <div className="rounded-[1.5rem] border border-lime-300/15 bg-lime-300/5 p-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-lime-200/80">
-                            Initial Setup
-                          </p>
-                          <p className="mt-3 text-sm leading-7 text-stone-300">
-                            New VMs start in <span className="font-semibold text-white">configuring</span>.
-                            Download the agent bundle, run `python agent.py`, and paste this
-                            laptop&apos;s connection key when the script asks for it. Once the provider
-                            machine registers, this laptop becomes available for renters automatically.
-                          </p>
-                        </div>
                       </div>
 
                       <div className="flex min-w-[18rem] flex-col gap-4 rounded-[1.5rem] border border-white/10 bg-stone-950/35 p-5">
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-stone-400">
-                            Provider Tools
-                          </p>
-                          <p className="mt-2 text-sm leading-7 text-stone-300">
-                            Use the setup key and agent bundle to connect this laptop to the platform.
+                            Tools
                           </p>
                         </div>
 
@@ -244,12 +263,49 @@ function YourVMsPage({ authToken, currentUser }) {
                           Copy Setup Key
                         </button>
 
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadConnector(vm)}
+                          disabled={downloadingVmId === vm.id}
+                          className="inline-flex items-center justify-center rounded-full bg-lime-300 px-4 py-3 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-lime-200 disabled:cursor-wait disabled:opacity-70"
+                        >
+                          {downloadingVmId === vm.id ? 'Preparing Connector...' : 'Download Connector'}
+                        </button>
+
                         <a
                           href={`${apiHost}/download/python`}
-                          className="inline-flex items-center justify-center rounded-full bg-lime-300 px-4 py-3 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-lime-200"
+                          className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-stone-100 transition hover:-translate-y-0.5 hover:bg-white/10"
                         >
-                          Download Agent Bundle
+                          Download Raw Script Bundle
                         </a>
+
+                        <div className="mt-2 rounded-[1.25rem] border border-white/10 bg-black/10 p-4">
+                          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-stone-400">
+                            Desktop App
+                          </p>
+                          <div className="mt-4 flex flex-col gap-3">
+                            {desktopPlatforms.map((platform) => {
+                              const artifact = desktopArtifactsByPlatform[platform.key]
+
+                              return artifact ? (
+                                <a
+                                  key={platform.key}
+                                  href={`${apiHost}${artifact.downloadPath}`}
+                                  className="inline-flex items-center justify-center rounded-full border border-emerald-200/10 bg-emerald-300/10 px-4 py-3 text-sm font-semibold text-emerald-50 transition hover:-translate-y-0.5 hover:bg-emerald-300/20"
+                                >
+                                  {platform.label}
+                                </a>
+                              ) : (
+                                <span
+                                  key={platform.key}
+                                  className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-stone-400"
+                                >
+                                  {platform.label} Unavailable
+                                </span>
+                              )
+                            })}
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </article>

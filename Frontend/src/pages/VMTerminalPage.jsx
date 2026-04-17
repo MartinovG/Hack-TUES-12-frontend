@@ -112,7 +112,7 @@ function VMTerminalPage({ authToken, currentUser }) {
 
       setJobs((currentJobs) => [createdJob, ...currentJobs])
       setCommand('')
-      setSuccessMessage('Command sent. Waiting for terminal output from the remote VM...')
+      setSuccessMessage('Command sent.')
     } catch (error) {
       setErrorMessage(error.message)
     } finally {
@@ -145,7 +145,7 @@ function VMTerminalPage({ authToken, currentUser }) {
             }
           : currentRental,
       )
-      setSuccessMessage('The VM stop request was sent successfully. This session is now completed.')
+      setSuccessMessage('Stop request sent.')
     } catch (error) {
       setErrorMessage(error.message)
     } finally {
@@ -163,15 +163,11 @@ function VMTerminalPage({ authToken, currentUser }) {
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-4">
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-lime-200/80">
-              Remote Control
+              Terminal
             </p>
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
-              Simulated VM Terminal
+              VM Terminal
             </h1>
-            <p className="max-w-3xl text-base leading-8 text-stone-300">
-              Send commands from the frontend, let the backend forward them to the provider
-              computer, and review the returned output below.
-            </p>
           </div>
 
           <Link
@@ -185,7 +181,7 @@ function VMTerminalPage({ authToken, currentUser }) {
 
       {isLoading ? (
         <section className="rounded-[2rem] border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
-          <p className="text-lg text-white">Loading terminal session...</p>
+          <p className="text-lg text-white">Loading...</p>
         </section>
       ) : (
         <>
@@ -230,8 +226,8 @@ function VMTerminalPage({ authToken, currentUser }) {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <p className="text-sm text-stone-400">
                   {isRunning
-                    ? 'This VM is running and ready to receive commands.'
-                    : 'Commands are available only while the VM is in running state.'}
+                    ? 'Running'
+                    : 'Unavailable'}
                 </p>
                 <div className="flex flex-col gap-3 sm:flex-row">
                   <button
@@ -258,12 +254,12 @@ function VMTerminalPage({ authToken, currentUser }) {
             <p className="text-xs font-semibold uppercase tracking-[0.35em] text-lime-200/80">
               Terminal Output
             </p>
-            <h2 className="mt-2 text-2xl font-semibold text-white">Command History</h2>
+            <h2 className="mt-2 text-2xl font-semibold text-white">History</h2>
 
             <div className="mt-6 space-y-4 font-mono text-sm">
               {sortedJobs.length === 0 ? (
                 <div className="rounded-[1.5rem] border border-dashed border-white/15 bg-white/5 p-6 text-stone-300">
-                  No commands have been sent to this VM yet.
+                  No commands yet.
                 </div>
               ) : (
                 sortedJobs.map((job) => (
@@ -283,7 +279,7 @@ function VMTerminalPage({ authToken, currentUser }) {
                     <pre className="mt-4 overflow-x-auto whitespace-pre-wrap break-words rounded-2xl border border-white/5 bg-stone-950/70 p-4 text-stone-200">
                       {job.result ||
                         (job.status === 'pending'
-                          ? 'Waiting for the backend to dispatch this command...'
+                          ? 'Pending...'
                           : 'No output yet.')}
                     </pre>
                   </article>
