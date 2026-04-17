@@ -1,0 +1,71 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main-capability",
+  "description": "Capabilities for the Hive desktop connector main window",
+  "windows": ["main"],
+  "permissions": [
+    "core:default",
+    "dialog:default",
+    {
+      "identifier": "shell:allow-spawn",
+      "allow": [
+        {
+          "name": "venv-python-agent",
+          "cmd": ".venv/bin/python",
+          "args": [{ "validator": "\\S+" }],
+          "sidecar": false
+        },
+        {
+          "name": "python3-agent",
+          "cmd": "python3",
+          "args": [{ "validator": "\\S+" }],
+          "sidecar": false
+        },
+        {
+          "name": "python-agent",
+          "cmd": "python",
+          "args": [{ "validator": "\\S+" }],
+          "sidecar": false
+        },
+        {
+          "name": "py-agent",
+          "cmd": "py",
+          "args": [{ "validator": "\\S+" }],
+          "sidecar": false
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "venv-python-agent",
+          "cmd": ".venv/bin/python",
+          "args": [{ "validator": "\\S+" }],
+          "sidecar": false
+        },
+        {
+          "name": "python3-agent",
+          "cmd": "python3",
+          "args": [{ "validator": "\\S+" }],
+          "sidecar": false
+        },
+        {
+          "name": "python-agent",
+          "cmd": "python",
+          "args": [{ "validator": "\\S+" }],
+          "sidecar": false
+        },
+        {
+          "name": "py-agent",
+          "cmd": "py",
+          "args": [{ "validator": "\\S+" }],
+          "sidecar": false
+        }
+      ]
+    },
+    {
+      "identifier": "shell:allow-kill"
+    }
+  ]
+}

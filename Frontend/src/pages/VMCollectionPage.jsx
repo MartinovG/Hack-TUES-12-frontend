@@ -176,9 +176,7 @@ function VMCollectionPage({ authToken }) {
 
       setIsAddModalOpen(false)
       setNewVm(initialVmForm)
-      setSuccessMessage(
-        `Laptop ${createdVm.name} was created in building state. Finish setup from Your VMs & Computers using its connection key.`,
-      )
+      setSuccessMessage(`${createdVm.name} was added.`)
       await refreshVms()
     } catch (error) {
       setErrorMessage(error.message)
@@ -194,9 +192,7 @@ function VMCollectionPage({ authToken }) {
 
     try {
       await rentalsApi.create(selectedVm.id, authToken)
-      setSelectionMessage(
-        'Rental created successfully. The laptop will disappear from the available list after refresh.',
-      )
+      setSelectionMessage('Rental created.')
       await refreshVms()
       setSelectedVm(null)
     } catch (error) {
@@ -217,10 +213,6 @@ function VMCollectionPage({ authToken }) {
             <h1 className="text-4xl font-bold tracking-tight text-white sm:text-5xl">
               Laptops Collection
             </h1>
-            <p className="text-base leading-8 text-stone-300">
-              Browse the laptops that are currently connected, configured, and ready to be assigned
-              to someone who needs computing access.
-            </p>
           </div>
 
           <button
@@ -297,7 +289,7 @@ function VMCollectionPage({ authToken }) {
 
       {isLoading ? (
         <section className="rounded-[2rem] border border-white/10 bg-white/5 p-8 text-center backdrop-blur-xl">
-          <p className="text-lg text-white">Loading available laptops from the backend...</p>
+          <p className="text-lg text-white">Loading laptops...</p>
         </section>
       ) : (
         <section className="grid gap-5">
@@ -323,9 +315,6 @@ function VMCollectionPage({ authToken }) {
                           ) : null}
                         </div>
                         <h2 className="text-2xl font-semibold text-white">{vm.name}</h2>
-                        <p className="max-w-3xl text-sm leading-7 text-stone-300">
-                          Ready to be assigned. This laptop is currently available in the shared device pool.
-                        </p>
                       </div>
 
                       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -351,10 +340,7 @@ function VMCollectionPage({ authToken }) {
                         <p className="text-xs font-semibold uppercase tracking-[0.28em] text-stone-400">
                           Next step
                         </p>
-                        <p className="mt-2 text-sm leading-7 text-stone-300">
-                          Open the assignment modal, pick an operating system, and send the rental
-                          request to the backend.
-                        </p>
+                        <p className="mt-2 text-sm leading-7 text-stone-300">Ready to rent.</p>
                       </div>
 
                       <button
@@ -374,23 +360,14 @@ function VMCollectionPage({ authToken }) {
           {filteredVms.length === 0 ? (
             <article className="rounded-[2rem] border border-dashed border-white/15 bg-white/5 p-10 text-center backdrop-blur-xl">
               <p className="text-xl font-semibold text-white">No available laptops match this filter.</p>
-              <p className="mt-3 text-sm leading-7 text-stone-300">
-                Adjust the filters or register a new laptop with the add form.
-              </p>
             </article>
           ) : null}
         </section>
       )}
 
       {selectedVm ? (
-        <ModalShell title={`Assign ${selectedVm.name}`}>
+        <ModalShell title={`Rent ${selectedVm.name}`}>
           <form className="space-y-5" onSubmit={handleSendSelection}>
-            <p className="text-sm leading-7 text-stone-300">
-              This action now calls `POST /rentals` for the selected laptop. The operating system
-              choice stays in the frontend flow for now because the current backend rental endpoint
-              does not accept an OS override.
-            </p>
-
             <label className="block space-y-2">
               <span className="text-sm font-medium text-stone-100">Preferred Operating System</span>
               <select
@@ -425,7 +402,7 @@ function VMCollectionPage({ authToken }) {
                 disabled={isSubmittingSelection}
                 className="rounded-full bg-lime-300 px-5 py-3 text-sm font-semibold text-stone-950 transition hover:-translate-y-0.5 hover:bg-lime-200 disabled:cursor-not-allowed disabled:opacity-60"
               >
-                {isSubmittingSelection ? 'Sending...' : 'Send'}
+                {isSubmittingSelection ? 'Sending...' : 'Rent'}
               </button>
             </div>
           </form>
